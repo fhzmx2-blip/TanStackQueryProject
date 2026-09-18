@@ -14,39 +14,38 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Create .env') {
-            steps {
-                withCredentials([
+        stage("Create .env") {
+			steps {
+				withCredentials([
 					string(
-						credentailsId: 'oracle_url',
+						credentialsId: 'oracle_url',
 						variable: 'DB_URL'
 					),
 					string(
-						credentailsId: 'oracle_name',
+						credentialsId: 'oracle_name',
 						variable: 'DB_USERNAME'
 					),
 					string(
-						credentailsId: 'oracle_pwd',
-						variable: 'DB_PASSWORD'						
+						credentialsId: 'oracle_pwd',
+						variable: 'DB_PASSWORD'
 					)
 				]){
 					sh '''
-						echo "SPRING_PROFILES_ACTIVE=prod" > .env
-						echo "LOCAL_DB_URL=${DB_URL}" >> .env
-						echo "DB_USERNAME=${DB_USERNAME}" >> .env
-						echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
-						
-						chmod 600 .env
+					    echo "SPRING_PROFILES_ACTIVE=prod" > .env
+					    echo "LOCAL_DB_URL=${DB_URL}" >> .env
+					    echo "DB_USERNAME=${DB_USERNAME}" >> .env
+					    echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
+					    
+					    chmod 600 .env
 					   '''
 				}
-            }
-        }
-
-        stage('Build') {
+			}
+		}
+        stage('Gradle Build') {
             steps {
                 sh '''
                     chmod +x gradlew
-                    ./gradlew clean build -x test                    
+                    ./gradlew clean build -x test
                 '''
             }
         }
@@ -64,25 +63,23 @@ pipeline {
                 sh '''
                     cd ${APP_DIR}
 
-                    echo "===== 최신 이미지 확인 ====="
-                    docker images react-app
-
-                    echo "===== Rolling 배포 ====="
+                    echo "===== Docker Compose 시작 ====="
 
                     docker compose up -d \
-                        --no-deps \
                         --scale app=2
 
                     echo "===== 컨테이너 확인 ====="
+
                     docker compose ps
 
-                    echo "===== Health Check ====="
+                    echo "===== Health Check 대기 ====="
 
                     sleep 10
 
                     docker compose ps
 
                     echo "===== Nginx Reload ====="
+
                     docker exec nginx nginx -s reload
 
                     echo "===== 배포 완료 ====="

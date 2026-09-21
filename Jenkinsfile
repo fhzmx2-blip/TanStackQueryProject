@@ -13,7 +13,7 @@ pipeline {
         // AWS EC2
         // =====================================================
         EC2_USER = "ubuntu"
-        EC2_HOST = "3.37.62.222"
+        EC2_HOST = "54.180.102.73"
 
         // EC2 배포 디렉터리
         EC2_APP_DIR = "/home/ubuntu/app"
